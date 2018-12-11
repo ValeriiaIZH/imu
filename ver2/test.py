@@ -5,33 +5,15 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = "data.txt"
+filename = "imu_data.txt"
+d_time = 0.02
 array = []
-time = []
-accel = []
-gyro = []
-magn = []
-steps_array = []
-velocity = []
-d_time = 0.01
-velocity_x = []
-vel_x = []
-velocity_y = []
-vel_y = []
-velocity_z = []
-vel_z = []
-position_x = []
-pos_x = []
-position_y = []
-pos_y = []
-position_z = []
-pos_z = []
+static_array = []
 
-
-# lambda z, x, y: z + x * (y if y is not None else 1)
-
-def func(current, previous, factor):
-    return previous + (current * factor)
+m_array = {'time': [], 'accel': [], 'gyro': [], 'magn': []}
+velocity = {'x': [], 'y': [], 'z': []}
+position = {'x': [], 'y': [], 'z': []}
+m_position = {'x': [], 'y': [], 'z': []}
 
 with open(filename, 'r') as file:
     data = file.readlines()
@@ -40,58 +22,41 @@ with open(filename, 'r') as file:
     num = sum(1 for line in data)
     # print (num)
     for i in range(0, num):
-        accel.append(math.sqrt(array[i][3]**2 + array[i][4]**2 + array[i][5]**2))
-        # gyro = [array[i][0], array[i][1], array[i][2]]
-        # magn = [array[i][6], array[i][7], array[i][8]]
-    # print(accel)
+        m_array['accel'].append(np.sqrt(array[i][1]**2 + array[i][2]**2 + array[i][3]**2))
+        # m_array['gyro'].append([array[i][4], array[i][5], array[i][6]])
+    # print(m_array['accel'])
 
     for i in range(0, num):
-        if abs(accel[i]) < 1.5:
-            static_array = accel[i]
-        # print(static_array)
+        if abs(m_array['accel'][i]) < 1.5:
+            static_array.append(m_array['accel'][i])
+    # print(static_array)
 
-    for i in range(0, num):
-        acc_x = array[i][3]
-        acc_y = array[i][4]
-        acc_z = array[i][5] - 9.81
-    # print(acc_z)
+    for k in range(0, num):
+        acc_x = array[k][3]
+        acc_y = array[k][4]
+        acc_z = array[k][5] - 9.81
+        # print(acc_z)
 
-        velocity_x.append(acc_x * d_time)
-        velocity_y.append(acc_y * d_time)
-        velocity_z.append(acc_z * d_time)
+        velocity['x'].append(acc_x * d_time)
+        velocity['y'].append(acc_y * d_time)
+        velocity['z'].append(acc_z * d_time)
 
-        position_x = [i * d_time for i in velocity_x]
-        position_y = [i * d_time for i in velocity_y]
-        position_z = [i * d_time for i in velocity_z]
-    #print(velocity_x)
-    #print(position_x)
-    for n in range(1, num-1):
-        vel_x.append(velocity_x[n-1] + velocity_x[n])
-        vel_y.append(velocity_y[n-1] + velocity_y[n])
-        vel_z.append(velocity_z[n-1] + velocity_z[n])
+        position['x'] = [i * d_time for i in velocity['x']]
+        position['y'] = [i * d_time for i in velocity['y']]
+        position['z'] = [i * d_time for i in velocity['z']]
+    # print(velocity['x'])
+    # print(position['x'])
 
-        pos_x.append(position_x[n-1] + position_x[n])
-        pos_y.append(position_y[n-1] + position_y[n])
-        pos_z.append(position_z[n-1] + position_z[n])
-    #print(vel_x)
+    for n in range(1, num - 1):
+        velocity['x'][n] = velocity['x'][n - 1] + velocity['x'][n]
+        velocity['y'][n] = velocity['y'][n - 1] + velocity['y'][n]
+        velocity['z'][n] = velocity['z'][n - 1] + velocity['z'][n]
 
-with open("time_d.txt", "r") as file_time:
-    time_d = file_time.readlines()
-    for line in time_d:
-        time.append([float(t) for t in line.split()])
-    # print(time)
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-X = pos_x
-Y = pos_y
-Z = pos_z
-t = time
-ax.plot(X, Y, Z)
-
-
-plt.show()
-
+        m_position['x'].append(position['x'][n - 1] + position['x'][n])
+        m_position['y'].append(position['y'][n - 1] + position['y'][n])
+        m_position['z'].append(position['z'][n - 1] + position['z'][n])
+    # print(velocity['x'])
+    # print(m_position['x'])
 
 
 
