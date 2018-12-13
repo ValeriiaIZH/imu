@@ -32,9 +32,9 @@ with open(filename, 'r') as file:
     # print(static_array)
 
     for k in range(0, num):
-        acc_x = array[k][3]
-        acc_y = array[k][4]
-        acc_z = array[k][5] - 9.81
+        acc_x = array[k][1]
+        acc_y = array[k][2]
+        acc_z = array[k][3] - 9.81
         # print(acc_z)
 
         velocity['x'].append(acc_x * d_time)
@@ -48,17 +48,14 @@ with open(filename, 'r') as file:
     # print(position['x'])
 
     for n in range(1, num - 1):
-        velocity['x'][n] = velocity['x'][n - 1] + velocity['x'][n]
-        velocity['y'][n] = velocity['y'][n - 1] + velocity['y'][n]
-        velocity['z'][n] = velocity['z'][n - 1] + velocity['z'][n]
-
         m_position['x'].append(position['x'][n - 1] + position['x'][n])
         m_position['y'].append(position['y'][n - 1] + position['y'][n])
         m_position['z'].append(position['z'][n - 1] + position['z'][n])
     # print(velocity['x'])
     # print(m_position['x'])
 
-
-
-
-
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+# ax = plt.subplot()
+ax.plot(m_position['x'], m_position['y'], m_position['z'], color='blue')
+plt.show()

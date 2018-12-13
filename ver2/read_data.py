@@ -1,18 +1,28 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
-import math
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
+
+d_time = 0.02
 
 
 def main():
-    m_accel, m_gyro, m_magn, num_of_strings = read_data("data.txt")
-    filtred_array = filter(m_accel, num_of_strings)
+    m_acc, m_gyro, acceleration_x, acceleration_y, acceleration_z, num_of_strings = read_data("imu_data.txt")
+    #filtred_array = filter(m_acc, num_of_strings)
+    abs_acc = np.abs(m_acc)
+    step_array = srez_step(m_acc, num_of_strings)
+    m_pos = {'x': [], 'y': [], 'z': []}
+    m_pos = count_vel_and_pos(m_acc, acceleration_x, acceleration_y, acceleration_z, d_time, num_of_strings)
+    print(m_pos)
 
 
 def read_data(filename):
     array = []
-    accel = []
-    gyro = []
-    magn = []
+    m_array = {'time': [], 'acc': [], 'gyro': [], 'magn': []}
+    acc_x = []
+    acc_y = []
+    acc_z = []
     with open(filename, 'r') as file:
         data = file.readlines()
         for line in data:
@@ -20,17 +30,16 @@ def read_data(filename):
         num = sum(1 for line in data)
         # print (num)
         for i in range(0, num):
-            accel = accel.append(math.sqrt(array[i][3]**2 + array[i][4]**2 + array[i][5]**2))
-            # gyro = accel.append(math.sqrt(array[i][0]**2 + array[i][1]**2 + array[i][2]**2))
-            # magn = accel.append(math.sqrt(array[i][6]**2 + array[i][7]**2 + array[i][8]**2))
-            # print(accel)
-    return accel, gyro, magn, num
+            m_array['acc'].append(np.sqrt(array[i][1] ** 2 + array[i][2] ** 2 + array[i][3] ** 2))
+            # m_array['gyro'].append([array[i][4], array[i][5], array[i][6]])
+            acc_x.append(array[i][1])
+            acc_y.append(array[i][2])
+            acc_z.append(array[i][3] - 9.81)
+        print(m_array['acc'])
+        print(acc_x)
+    return m_array['acc'], m_array['gyro'], acc_x, acc_y, acc_z, num
 
-
-def abs(array):
-    abs(array)
-    return array
-
+'''
 # band-pass filter (a merge of low pass and high pass filters
 def filter(array, num):
     f_l = 0.1
@@ -57,48 +66,47 @@ def filter(array, num):
     filtred_arr = np.convolve(s, h)
 
     return filtred_arr
-
+'''
 
 def srez_step(array, num):
     static_array = []
     for i in range(0, num):
         if array[i] < 1.5:
-            static_array = array[i]
-        print(static_array)
+            static_array.append(array[i])
     return static_array
 
 
-def count_vel_and_pos(array, time, num):
-    velocity_x = []
-    velocity_y = []
-    velocity_z = []
-    position_x = []
-    position_y = []
-    position_z = []
-    for i in range(0, num):
-        acc_x = array[i][3]
-        acc_y = array[i][4]
-        acc_z = array[i][5] - 9.81
-        # print(acc_z)
+def count_vel_and_pos(array, acc_x, acc_y, acc_z, time, num):
+    velocity = {'x': [], 'y': [], 'z': []}
+    position = {'x': [], 'y': [], 'z': []}
+    m_position = {'x': [], 'y': [], 'z': []}
 
-        velocity_x.append(acc_x * time)
-        velocity_y.append(acc_y * time)
-        velocity_z.append(acc_z * time)
-        position_x = [i * time for i in velocity_x]
-        position_y = [i * time for i in velocity_y]
-        position_z = [i * time for i in velocity_z]
+    for k in range(0, num):
+        velocity['x'].append(acc_x * d_time)
+        velocity['y'].append(acc_y * d_time)
+        velocity['z'].append(acc_z * d_time)
 
-    return position_x, position_y, position_z, velocity_x, velocity_y, velocity_z
+        position['x'] = [i * d_time for i in velocity['x']]
+        position['y'] = [i * d_time for i in velocity['y']]
+        position['z'] = [i * d_time for i in velocity['z']]
 
+    for n in range(1, num - 1):
+        m_position['x'].append(position['x'][n - 1] + position['x'][n])
+        m_position['y'].append(position['y'][n - 1] + position['y'][n])
+        m_position['z'].append(position['z'][n - 1] + position['z'][n])
+        # print(m_position)
+    return m_position
 
-def plots (data):
+"""
+def plots(m_position):
     fig = plt.figure()
-    plt.plot(data, label = r'data')
-    plt.xlabel(r'time')
-    plt.ylabel(r'data')
-    plt.grid(True)
-    fig.savefig("plot.png")
+    ax = fig.add_subplot(111, projection='3d')
+    x = m_position['x']
+    y = m_position['y']
+    z = m_position['z']
+    ax.plot(x, y, z, color='blue')
     plt.show()
+"""
 
 
 if __name__ == '__main__':

@@ -34,7 +34,7 @@ with open(filename, 'r') as file:
     num = sum(1 for line in data)
     # print (num)
     for i in range(0, num):
-        accel.append(np.sqrt(array[i][1]**2 + array[i][2]**2 + array[i][3]**2))
+        accel.append(np.sqrt(array[i][1]**2 + array[i][2]**2 + array[i][2]**2))
         gyro = [array[i][4], array[i][5], array[i][6]]
     # print(m_array['accel'])
 
@@ -45,9 +45,9 @@ with open(filename, 'r') as file:
     # print(static_array)
 
     for i in range(0, num):
-        acc_x = array[i][3]
-        acc_y = array[i][4]
-        acc_z = array[i][5] - 9.81
+        acc_x = array[i][1]
+        acc_y = array[i][2]
+        acc_z = array[i][3] - 9.81
     # print(acc_z)
 
         velocity_x.append(acc_x * d_time)
@@ -60,10 +60,6 @@ with open(filename, 'r') as file:
     # print(velocity_x)
     # print(position_x)
     for n in range(1, num-1):
-        vel_x.append(velocity_x[n-1] + velocity_x[n])
-        vel_y.append(velocity_y[n-1] + velocity_y[n])
-        vel_z.append(velocity_z[n-1] + velocity_z[n])
-
         pos_x.append(position_x[n-1] + position_x[n])
         pos_y.append(position_y[n-1] + position_y[n])
         pos_z.append(position_z[n-1] + position_z[n])
@@ -72,9 +68,6 @@ with open(filename, 'r') as file:
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 # ax = plt.subplot()
-X = pos_x
-Y = pos_y
-Z = pos_z
-ax.plot(X, Y, Z)
+ax.plot(pos_x, pos_y, pos_z, color = 'blue')
 plt.show()
 
