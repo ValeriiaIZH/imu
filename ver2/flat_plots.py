@@ -35,21 +35,21 @@ with open("dt 0_01.txt", 'r') as file:
         accel.append(np.sqrt(array[i][4] ** 2 + array[i][5] ** 2 + array[i][6] ** 2))
 
 plt.plot(ax)
-plt.title("Accelaration in X-direction(m/s2)")
+plt.title("Accelaration x (m/s2)")
 plt.grid()
 plt.xlabel("time step")
 plt.ylabel("Accelaration")
 plt.show()
 
 plt.plot(ay)
-plt.title("Accelaration in Y-direction(m/s2)")
+plt.title("Accelaration y (m/s2)")
 plt.grid()
 plt.xlabel("time step")
 plt.ylabel("Accelaration")
 plt.show()
 
 plt.plot(az)
-plt.title("Accelaration in Z-direction(m/s2)")
+plt.title("Accelaration z (m/s2)")
 plt.grid()
 plt.xlabel("time step")
 plt.ylabel("Accelaration")
@@ -64,7 +64,7 @@ vel = np.array(vel)
 
 
 plt.plot(vel)
-plt.title("Velocity in X-direction(m/s)")
+plt.title("Velocity in x (m/s)")
 plt.grid()
 plt.xlabel("time step")
 plt.ylabel("Velocity")
@@ -93,16 +93,16 @@ for i in range(0, num):
     dist.append(d)
 
 plt.plot(dist)
-plt.title("Total Distance in meter")
+plt.title("Total distance in meter")
 plt.grid()
 plt.xlabel("time step")
-plt.ylabel("Distance")
+plt.ylabel("distance")
 plt.show()
 
 rot_angle = 2 * np.arcsin(yaw)
 
 plt.plot(rot_angle)
-plt.title("Rotational Vector in radian")
+plt.title("Rotational vector in radian")
 plt.grid()
 plt.xlabel("time step")
 plt.ylabel("angle")
