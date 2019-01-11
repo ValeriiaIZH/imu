@@ -5,7 +5,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = "imu_data.txt"
+filename = "data_jan_5a.txt"
 d_time = 0.02
 array = []
 static_array = []
@@ -34,8 +34,8 @@ with open(filename, 'r') as file:
     num = sum(1 for line in data)
     # print (num)
     for i in range(0, num):
-        accel.append(np.sqrt(array[i][1]**2 + array[i][2]**2 + array[i][2]**2))
-        gyro = [array[i][4], array[i][5], array[i][6]]
+        accel.append(np.sqrt(array[i][4]**2 + array[i][5]**2 + array[i][6]**2))
+        gyro = [array[i][1], array[i][2], array[i][3]]
     # print(m_array['accel'])
 
 
