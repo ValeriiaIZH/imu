@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from math import *
 
-d_time = 0.1
+d_time = 0.03
 array = []
 accel = []
 gx = []
@@ -11,6 +11,11 @@ gz = []
 ax = []
 ay = []
 az = []
+mx = []
+my = []
+mz = []
+mag_x = []
+mag_y = []
 yaw = []
 pitch = []
 roll = []
@@ -29,18 +34,26 @@ with open("sportzal4.txt", 'r') as file:
         gx.append(array[i][3])
         gy.append(array[i][4])
         gz.append(array[i][5])
-        yaw.append(atan(gz[i]/sqrt(gx[i]*gx[i] + gz[i]*gz[i])))
-        pitch.append( atan(ax[i] / sqrt(ay[i] * ay[i] + az[i]* az[i])))
-        roll.append( atan(ay[i]/ sqrt(ax[i] * ax[i]+ az[i] * az[i])))
+
+        mx.append(array[i][6])
+        my.append(array[i][7])
+        mz.append(array[i][8])
+
+        #pitch.append(atan2(ax[i], sqrt(ay[i] * ay[i] + az[i] * az[i])))
+        #roll.append(atan2(ay[i], sqrt(ax[i] * ax[i] + az[i] * az[i])))
+        #mag_x.append(mx[i] * cos(pitch[i]) + my[i] * sin(roll[i]) * sin(pitch[i]) + mz[i] * cos(roll[i]) * sin(pitch[i]))
+        #mag_y.append(my[i] * cos(roll[i]) - mz[i] * sin(roll[i]))
+        #yaw.append(atan2(mag_x[i],mag_y[i]))
         #yaw.append(array[i][9] * pi / 180)
-        #pitch.append(array[i][10] * pi / 180)
-        #roll.append(array[i][11] * pi / 180)
+        if yaw[i] > 1 : yaw[i] = 1
+        if yaw[i] < -1 : yaw[i] = -1
         accel.append(np.sqrt(array[i][4] ** 2 + array[i][5] ** 2 + array[i][6] ** 2))
+    print(yaw)
 
 vel = []
 v = 0
 for i in range(0, num):
-    v = v + ay[i]*d_time
+    v = v + ax[i]*d_time
     vel.append(v)
 vel = np.array(vel)
 
@@ -53,8 +66,6 @@ for i in range(0, num):
     dist.append(d)
 
 rot_angle = 2 * np.arcsin(yaw)
-#rot_angle = 2 * np.arcsin(pitch)
-#rot_angle = 2 * np.arcsin(roll)
 
 x = 0
 y = 0
@@ -128,3 +139,4 @@ plt.title("Trajectory ")
 plt.xlabel("x-axis")
 plt.ylabel("y-axis")
 plt.show()
+
