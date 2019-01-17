@@ -2,12 +2,12 @@
 tracking object with imu
 
 there is python code for plotting trajectory of moving object
-5 files of data: sportzal1,sportzal2,sportzal3,sportzal4,sportzal5
-sportzal1 - "П"trajectory, delay(0.1), ordinary velocity
-sportzal2 - "П"trajectory, delay(0.1), slow
-sportzal3 - "П"trajectory, delay(0.1), fast
-sportzal4 - "П"trajectory, delay(0.03), ordinary
-sportzal5 - "O"trajectory, delay(0.1), ordinary
+5 files of data: values_from_gym_1,values_from_gym_2,values_from_gym_3,values_from_gym_4,values_from_gym_5
+values_from_gym_1 - "П"trajectory, delay(0.1), ordinary velocity
+values_from_gym_2 - "П"trajectory, delay(0.1), slow
+values_from_gym_3 - "П"trajectory, delay(0.1), fast
+values_from_gym_4 - "П"trajectory, delay(0.03), ordinary
+values_from_gym_5 - "O"trajectory, delay(0.1), ordinary
 
 file flat_plots.py - trajectory in XY-plane
 file test.py, test_list.py - 3D-track (don't work)
