@@ -1,3 +1,6 @@
+'''
+NOT READY YET
+'''
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,7 +8,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
 
-filename = "data_jan_5a.txt"
+filename = "data_from_gym2.txt"
 d_time = 0.02
 array = []
 static_array = []
@@ -14,18 +17,23 @@ accel = []
 gyro = []
 magn = []
 velocity = []
+vel = 0
 velocity_x = []
-vel_x = []
+vel_x = 0
 velocity_y = []
-vel_y = []
+vel_y = 0
 velocity_z = []
-vel_z = []
+vel_z = 0
 position_x = []
 pos_x = []
 position_y = []
 pos_y = []
 position_z = []
 pos_z = []
+dist = []
+dxx = 0
+dyy = 0
+dzz = 0
 
 with open(filename, 'r') as file:
     data = file.readlines()
@@ -49,10 +57,24 @@ with open(filename, 'r') as file:
         acc_y = array[i][2]
         acc_z = array[i][3] - 9.81
     # print(acc_z)
+        vel_x = vel_x + acc_x * d_time
+        vel_y = vel_y + acc_y * d_time
+        vel_z = vel_z + acc_z * d_time
+        velocity_x.append(vel_x)
+        velocity_y.append(vel_y)
+        velocity_z.append(vel_z)
+    velocity_x = np.array(velocity_x)
+    velocity_y = np.array(velocity_y)
+    velocity_z = np.array(velocity_z)
+    dx = velocity_x * d_time
+    dy = velocity_y * d_time
+    dz = velocity_z * d_time
 
-        velocity_x.append(acc_x * d_time)
-        velocity_y.append(acc_y * d_time)
-        velocity_z.append(acc_z * d_time)
+    for i in range(0, num):
+        dxx = dxx + dx[i]
+        dyy = dyy + dy[i]
+        dzz = dzz + dz[i]
+        dist.append(dxx)
 
         position_x = [i * d_time for i in velocity_x]
         position_y = [i * d_time for i in velocity_y]

@@ -1,3 +1,7 @@
+'''
+NOT READY YET
+Pure code with functions
+'''
 import math
 import numpy as np
 import matplotlib.pyplot as plt

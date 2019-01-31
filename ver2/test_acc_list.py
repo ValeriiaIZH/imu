@@ -67,7 +67,7 @@ with open(filename, 'r') as file:
         d = d + dy[i]
         dist.append(d)
     rot_angle_yaw = 2 * np.arcsin(yaw) * np.arcsin(pitch) * np.arcsin(roll)
-    # rot_angle_pitch = 2 * np.arcsin(pitch)
+    rot_angle_pitch = 2 * np.arcsin(pitch)
     # rot_angle_roll = 2 * np.arcsin(roll)
 
 # calculate points for trajectory
@@ -77,7 +77,7 @@ z_arr = []
 for i in range(0, num - 1):
     x = x + dy[i + 1] * np.sin(rot_angle_yaw[i])
     y = y + dy[i + 1] * np.cos(rot_angle_yaw[i])
-    z = z + dy[i + 1]
+    z = z + dy[i + 1] #* np.sin(rot_angle_pitch[i])*np.cos(rot_angle_yaw[i])
     x_arr.append(x)
     y_arr.append(y)
     z_arr.append(z)
@@ -89,7 +89,7 @@ real_coordinate_y = [0, 0, 5, 6]
 # plot figures
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(x_arr, y_arr,  color = 'blue')
+ax.plot(x_arr, y_arr, z_arr, color = 'blue')
 ax.plot(real_coordinate_x, real_coordinate_y, 'r')
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
