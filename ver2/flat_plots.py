@@ -1,3 +1,6 @@
+'''
+Code which represent plots with measured values from IMU and flat trajectory in X-Y plane
+'''
 import numpy as np
 from matplotlib import pyplot as plt
 from math import *
