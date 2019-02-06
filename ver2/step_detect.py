@@ -21,7 +21,7 @@ if not N % 2: N += 1
 n = np.arange(N)
 sample_period = 1/256
 
-filename = "dt 0_01.txt"
+filename = "data_from_gym2.txt"
 d_time = 0.01
 array = []
 static_array = []
@@ -38,7 +38,7 @@ with open(filename, 'r') as file:
     num = sum(1 for line in data)
     # print (num)
     for i in range(0, num):
-        accel.append(np.sqrt(array[i][1]**2 + array[i][2]**2 + array[i][3]**2))
+        accel.append(np.sqrt(array[i][0]**2 + array[i][1]**2 + array[i][2]**2))
         gyro = [array[i][4], array[i][5], array[i][6]]
 # high pass filter
 sinc_func_h = np.sinc(2 * fc * (n - (N - 1) / 2.))
@@ -62,9 +62,9 @@ static_ = static*20
 fig, plotting = plt.subplots()
 plotting.set_title('Acceleration (m/s^2)')
 line1, = plotting.plot(accel,  color='red', label='acc')
-line2, = plotting.plot(static_,  color='blue', label='stat')
-line3, = plotting.plot(low_filt_acc, label='lf')
-line4, = plotting.plot(high_filt_acc, label = 'hf')
+line2, = plotting.plot(static_,  color='blue', label='step')
+line3, = plotting.plot(low_filt_acc, label='low-pass filter')
+line4, = plotting.plot(high_filt_acc, label = 'high-pass filter')
 plt.xlabel("time step")
 plt.ylabel("Accelaration")
 leg = plotting.legend(loc='upper left', fancybox=True, shadow=True)

@@ -75,7 +75,7 @@ if __name__ == '__main__':
     pitch = []
     roll = []
     trueheading = []
-    filename = "data_from_gym2.txt"
+    filename = "dt 0_01.txt"
 
     # read data from file
     with open(filename, 'r') as file:
@@ -85,18 +85,18 @@ if __name__ == '__main__':
         num = sum(1 for line in data)
         # print (num)
         for i in range(0, num):
-            accel_x.append(array[i][0])
-            accel_y.append(array[i][1])
-            accel_z.append(array[i][2])
-            gyro_x.append(array[i][3])
-            gyro_y.append(array[i][4])
-            gyro_z.append(array[i][5])
-            magn_x.append(array[i][6])
-            magn_y.append(array[i][7])
-            magn_z.append(array[i][8])
-            yaw.append(array[i][9] * pi / 180)  # from degrees to radians
-            pitch.append(array[i][10] * pi / 180)
-            roll.append(array[i][11] * pi / 180)
+            accel_x.append(array[i][1])
+            accel_y.append(array[i][2])
+            accel_z.append(array[i][3])
+            gyro_x.append(array[i][4])
+            gyro_y.append(array[i][5])
+            gyro_z.append(array[i][6])
+            #magn_x.append(array[i][6])
+            #magn_y.append(array[i][7])
+            #magn_z.append(array[i][8])
+            yaw.append(array[i][8] * pi / 180)  # from degrees to radians
+            pitch.append(array[i][9] * pi / 180)
+            roll.append(array[i][10] * pi / 180)
 
     aX = accel_x
     aY = accel_y
@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
     # plt.show()
 
-    timepertimestamp = 0.01  # unit is in seconds
+    timepertimestamp = 0.001  # unit is in seconds
     noIters = len(aX)
 
     distance = 0
@@ -320,8 +320,8 @@ if __name__ == '__main__':
 
     fig11 = plt.figure()
     ax = fig11.gca()
-    ax.plot(timestamp, tH, label='TrueHeading')
-    ax.legend()
+    #ax.plot(timestamp, tH, label='TrueHeading')
+    #ax.legend()
 
     x = [0, steps[1]]
     y = [0, 0]
