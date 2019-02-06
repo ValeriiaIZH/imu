@@ -73,10 +73,14 @@ def main():
     hf_acc_vec, lf_acc_vec = lp_and_hp_filter(m_accel_vector, m_num)
     m_steps = detect_step(lf_acc_vec, m_num)
     four_flat_plots('step_detect', m_accel_vector, 'acc', hf_acc_vec, 'hl', lf_acc_vec, 'lf', m_steps, 'steps')
-    m_dy, m_rot_p, m_rot_y = vel_and_pos(m_steps, m_y, m_p, m_r, m_num)
+
+    m_dy, m_rot_p, m_rot_y = vel_and_pos(lf_acc_vec, m_y, m_p, m_r, m_num)
     x_arr, y_arr, z_arr = points_for_track(m_dy, m_rot_p, m_rot_y, m_num)
     xy_view_plot(x_arr, y_arr)
     vol_plot(x_arr, y_arr, z_arr)
+    #path_x_kalman, path_y_kalman, path_z_kalman, steps_kalman = kalman_fiter(m_ax, m_ay, m_az, m_num)
+    #x_kalman, y_kalman = kalman_coordinares(steps_kalman, m_num)
+    #vol_plot(x_kalman, y_kalman, path_z_kalman)
 
 
 # read data from file
@@ -189,7 +193,7 @@ def vel_and_pos(array, y, p, r, num):
 
 
 # calculate points for trajectory
-def points_for_track(dy, rot_angle_pitch, rot_angle_yaw,  num):
+def points_for_track(dy, rot_angle_pitch, rot_angle_yaw, num):
     x_arr = []
     y_arr = []
     z_arr = []
@@ -199,11 +203,134 @@ def points_for_track(dy, rot_angle_pitch, rot_angle_yaw,  num):
     for i in range(0, num - 1):
         x = x + dy[i + 1] * np.sin(rot_angle_yaw[i])
         y = y + dy[i + 1] * np.cos(rot_angle_yaw[i])
-        z = z + dy[i + 1]  # * np.sin(rot_angle_pitch[i])*np.cos(rot_angle_yaw[i])
+        z = z + dy[i + 1]
         x_arr.append(x)
         y_arr.append(y)
         z_arr.append(z)
     return x_arr, y_arr, z_arr
+
+
+# kalman filter for accelerometre
+def kalman_fiter(acc_x, acc_y, acc_z, num):
+    distance = 0
+    movement_x = 0
+    movement_y = 0
+    movement_z = 0
+
+    path_x = []
+    path_y = []
+    path_z = []
+    steps_path = []
+
+    for i in range(num):
+        if i == 0:
+            X = np.zeros((3, 1))
+            P = np.eye(3)
+            A = np.eye(3)
+            Q = np.array([1e-5, 1e-5, 1e-5])
+            R = np.array([5e-1, 5e-1, 1e-2])
+            B = np.zeros((3, 3))
+            U = np.zeros((3, 1))
+            H = np.eye(3)
+
+            acc_kalman = kalman(np.array(X), \
+                               np.array(P), \
+                               np.array(A), \
+                               np.array(Q), \
+                               np.array(R), \
+                               np.array(B), \
+                               np.array(U), \
+                               np.array(H))
+
+            distance_x = acc_x[i] * (d_time ** 2) * 0.5
+            distance_y = acc_y[i] * (d_time ** 2) * 0.5
+            distance_z = acc_z[i] * (d_time ** 2) * 0.5
+
+        else:
+
+            acc_kalman.predict(np.zeros((3, 1)))
+            old_acc = np.array([[acc_x[i]], [acc_y[i]], [acc_z[i]]])
+            new_acc = acc_kalman.update(old_acc)
+
+            distance_x = new_acc[0][0] * (d_time ** 2) * 0.5
+            distance_y = new_acc[1][0] * (d_time ** 2) * 0.5
+            distance_z = old_acc[2][0] * (d_time ** 2) * 0.5
+
+        distance += np.sqrt(distance_x ** 2 + distance_y ** 2)
+        steps_path.append(np.sqrt(distance_x ** 2 + distance_y ** 2))
+
+        movement_x += distance_x
+        movement_y += distance_y
+        movement_z += -1 * distance_z
+
+        path_x.append(movement_x)
+        path_y.append(movement_y)
+        path_z.append(movement_z)
+    return path_x, path_y, path_z, steps_path
+
+
+# coordinates
+def kalman_coordinares(steps_path, num):
+    x = [0, steps_path[1]]
+    y = [0, 0]
+
+    for i in range(1, num - 1):
+        angle = num[i + 1]
+        radius = steps_path[i + 1]
+
+        # print angle
+
+        slope = (y[i] - y[i - 1]) / (x[i] - x[i - 1])
+
+        x1 = x[i] + radius * np.sqrt(1 / (1 + slope ** 2))
+        x2 = x[i] - radius * np.sqrt(1 / (1 + slope ** 2))
+
+        y1 = y[i] + slope * radius * np.sqrt(1 / (1 + slope ** 2))
+        y2 = y[i] - slope * radius * np.sqrt(1 / (1 + slope ** 2))
+
+        valid = [0, 0, 0, 0]
+        if abs((y1 - y[i]) / (x1 - x[i]) - slope) < 1e-6:
+            valid[0] = 1
+        if abs((y1 - y[i]) / (x2 - x[i]) - slope) < 1e-6:
+            valid[1] = 1
+        if abs((y2 - y[i]) / (x1 - x[i]) - slope) < 1e-6:
+            valid[2] = 1
+        if abs((y2 - y[i]) / (x2 - x[i]) - slope) < 1e-6:
+            valid[3] = 1
+
+        for j, v in enumerate(valid):
+            if v == 1:
+                if j == 0 or j == 2:
+                    if (x[i - 1] < x[i] and x1 < x[i]) or (x[i - 1] > x[i] and x1 > x[i]):
+                        valid[0] = 0
+                        valid[2] = 0
+                if j == 1 or j == 3:
+                    if (x[i - 1] < x[i] and x2 < x[i]) or (x[i - 1] > x[i] and x2 > x[i]):
+                        valid[1] = 0
+                        valid[3] = 0
+
+        end_x = 0
+        end_y = 0
+
+        for j, v in enumerate(valid):
+            if v == 1:
+                if j == 0 or j == 2:
+                    end_x = x1
+                    end_y = y1
+                    break
+                if j == 1 or j == 3:
+                    end_x = x2
+                    end_y = y2
+                    break
+
+        rotated_coords = dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), \
+                            np.array([[end_x - x[i]], [end_y - y[i]]])) \
+                        + np.array([[x[i]], [y[i]]])
+
+        x.append(rotated_coords[0][0])
+        y.append(rotated_coords[1][0])
+    return x, y
+
 
 def one_flat_plot(plot_title, array0, name0):
     fig, plotting = plt.subplots()
