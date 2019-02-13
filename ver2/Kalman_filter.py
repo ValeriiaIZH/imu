@@ -117,8 +117,8 @@ if __name__ == '__main__':
     # hX = hData[['HeadingX']].to_dict()
     # hY = hData[['HeadingY']].to_dict()
     # hZ = hData[['HeadingZ']].to_dict()
-    for i in range(0, len(aX)):
-        trueheading.append(atan2(magn_y[i], magn_x[i]))
+    #for i in range(0, len(aX)):
+        #trueheading.append(atan2(magn_y[i], magn_x[i]))
 
     timestamp = range(len(aX))
 
@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
         pathX.append(movementX)
         pathY.append(movementY)
-        pathZ.append(movementZ * trueheading[i])
+        pathZ.append(movementZ)# * trueheading[i])
 
     '''
     fig = plt.figure()
@@ -325,7 +325,7 @@ if __name__ == '__main__':
 
     x = [0, steps[1]]
     y = [0, 0]
-
+    print(rotations)
     for i in range(1, len(rotations) - 1):
         angle = rotations[i + 1]
         radius = steps[i + 1]
@@ -382,16 +382,16 @@ if __name__ == '__main__':
         x.append(rotatedCoords[0][0])
         y.append(rotatedCoords[1][0])
 
-    fig12 = plt.figure()
+    '''fig12 = plt.figure()
     ax = fig12.gca()
     ax.plot(x[:], y[:], label='Path - top view')
     ax.legend()
 
     fig13 = plt.figure()
     ax = fig13.gca(projection='3d')
-    print(len(x), len(y), len(pathZ))
+    # print(len(x), len(y), len(pathZ))
     ax.plot(x, y, pathZ[:], label='Path - 3D')
     ax.legend()
 
-    plt.show()
+    plt.show()'''
 

@@ -1,7 +1,3 @@
-'''
-NOT READY YET
-Pure code with functions
-'''
 from math import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +7,7 @@ from numpy import dot, sum, tile, linalg
 from numpy.linalg import inv, pinv
 import pandas as pd
 
-d_time = 0.01
+d_time = 0.001
 
 
 class kalman():
@@ -69,18 +65,19 @@ class kalman():
 def main():
     # filename = "data_from_gym2.txt"
     filename = "dt 0_01.txt"
-    m_accel_vector, m_ax, m_ay, m_az, m_y, m_p, m_r, m_num = read_data(filename)
+    m_accel_vector, m_ax, m_ay, m_az, m_gx, m_gy, m_gz, m_y, m_p, m_r, m_num = read_data(filename)
     hf_acc_vec, lf_acc_vec = lp_and_hp_filter(m_accel_vector, m_num)
     m_steps = detect_step(lf_acc_vec, m_num)
     four_flat_plots('step_detect', m_accel_vector, 'acc', hf_acc_vec, 'hl', lf_acc_vec, 'lf', m_steps, 'steps')
 
-    m_dy, m_rot_p, m_rot_y = vel_and_pos(lf_acc_vec, m_y, m_p, m_r, m_num)
-    x_arr, y_arr, z_arr = points_for_track(m_dy, m_rot_p, m_rot_y, m_num)
+    m_dy, m_velocity, m_rot_p, m_rot_y = vel_and_pos(lf_acc_vec, m_y, m_p, m_r, m_num)
+    one_flat_plot('velocity', m_velocity, 'vel')
+    x_arr, y_arr, z_arr = points_for_track(m_dy, m_steps, m_rot_p, m_rot_y, m_num)
     xy_view_plot(x_arr, y_arr)
     vol_plot(x_arr, y_arr, z_arr)
-    #path_x_kalman, path_y_kalman, path_z_kalman, steps_kalman = kalman_fiter(m_ax, m_ay, m_az, m_num)
-    #x_kalman, y_kalman = kalman_coordinares(steps_kalman, m_num)
-    #vol_plot(x_kalman, y_kalman, path_z_kalman)
+    m_rotat, path_x_kalman, path_y_kalman, path_z_kalman, m_posx, m_posy, m_posz, steps_kalman = kalman_fiter(m_ax, m_ay, m_az, m_gx, m_gy, m_gz, m_num)
+    x_kalman, y_kalman = kalman_coordinares(steps_kalman, m_rotat)
+    vol_plot(x_kalman, y_kalman, path_z_kalman)
 
 
 # read data from file
@@ -112,12 +109,12 @@ def read_data(filename):
             accel_x.append(array[i][1])
             accel_y.append(array[i][2])
             accel_z.append(array[i][3])
-            #gyro_x.append(array[i][3])
-            #gyro_y.append(array[i][4])
-            #gyro_z.append(array[i][5])
-            #magn_x.append(array[i][6])
-            #magn_y.append(array[i][7])
-            #magn_z.append(array[i][8])
+            gyro_x.append(array[i][4])
+            gyro_y.append(array[i][5])
+            gyro_z.append(array[i][6])
+            # magn_x.append(array[i][6])
+            # magn_y.append(array[i][7])
+            # magn_z.append(array[i][8])
             yaw.append(array[i][8] * pi / 180)  # from degrees to radians
             pitch.append(array[i][9] * pi / 180)
             roll.append(array[i][10] * pi / 180)
@@ -127,8 +124,8 @@ def read_data(filename):
             if pitch[i] < -1: pitch[i] = -1
             if roll[i] > 1: roll[i] = 1
             if roll[i] < -1: roll[i] = -1
-            #trueheading.append(atan2(magn_y[i], magn_x[i]))
-    return accel_vector, accel_x, accel_y, accel_z, yaw, pitch, roll, num
+            # trueheading.append(atan2(magn_y[i], magn_x[i]))
+    return accel_vector, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, yaw, pitch, roll, num
 
 
 # band-pass filter (a merge of low pass and high pass filters
@@ -188,18 +185,23 @@ def vel_and_pos(array, y, p, r, num):
         dist.append(d)
     rot_angle_yaw = 2 * np.arcsin(y) * np.arcsin(p) * np.arcsin(r)
     rot_angle_pitch = 2 * np.arcsin(p)
-    #rot_angle_roll = 2 * np.arcsin(r)
-    return dy, rot_angle_pitch, rot_angle_yaw
+    # rot_angle_roll = 2 * np.arcsin(r)
+    """when array < 2.5 velocity = 0"""
+    return dy, velocity, rot_angle_pitch, rot_angle_yaw
 
 
 # calculate points for trajectory
-def points_for_track(dy, rot_angle_pitch, rot_angle_yaw, num):
+def points_for_track(dy, static, rot_angle_pitch, rot_angle_yaw, num):
     x_arr = []
     y_arr = []
     z_arr = []
     x = 0
     y = 0
     z = 0
+    for i in range(0, num):
+        if static[i] < 10:
+            dy[i] = 0
+
     for i in range(0, num - 1):
         x = x + dy[i + 1] * np.sin(rot_angle_yaw[i])
         y = y + dy[i + 1] * np.cos(rot_angle_yaw[i])
@@ -207,11 +209,12 @@ def points_for_track(dy, rot_angle_pitch, rot_angle_yaw, num):
         x_arr.append(x)
         y_arr.append(y)
         z_arr.append(z)
+
     return x_arr, y_arr, z_arr
 
 
 # kalman filter for accelerometre
-def kalman_fiter(acc_x, acc_y, acc_z, num):
+def kalman_fiter(acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, num):
     distance = 0
     movement_x = 0
     movement_y = 0
@@ -233,14 +236,7 @@ def kalman_fiter(acc_x, acc_y, acc_z, num):
             U = np.zeros((3, 1))
             H = np.eye(3)
 
-            acc_kalman = kalman(np.array(X), \
-                               np.array(P), \
-                               np.array(A), \
-                               np.array(Q), \
-                               np.array(R), \
-                               np.array(B), \
-                               np.array(U), \
-                               np.array(H))
+            acc_kalman = kalman(np.array(X), np.array(P), np.array(A), np.array(Q), np.array(R), np.array(B), np.array(U), np.array(H))
 
             distance_x = acc_x[i] * (d_time ** 2) * 0.5
             distance_y = acc_y[i] * (d_time ** 2) * 0.5
@@ -266,19 +262,112 @@ def kalman_fiter(acc_x, acc_y, acc_z, num):
         path_x.append(movement_x)
         path_y.append(movement_y)
         path_z.append(movement_z)
-    return path_x, path_y, path_z, steps_path
+
+        rX = gyr_x
+        rY = gyr_y
+        rZ = gyr_z
+
+        angleX = 0
+        angleY = 0
+        angleZ = 0
+
+        poseX = []
+        poseY = []
+        poseZ = []
+
+        rotations = []
+
+        for i in range(num):
+            angleX += rX[i] * d_time
+            angleY += rY[i] * d_time
+
+            if i == 0:
+                X = 0
+                P = 1
+                A = 1
+                Q = 1e-5
+                R = 3e-1
+                B = 0
+                U = 0
+                H = 1
+
+                angleZKalman = kalman(np.array(X), \
+                                      np.array(P), \
+                                      np.array(A), \
+                                      np.array(Q), \
+                                      np.array(R), \
+                                      np.array(B), \
+                                      np.array(U), \
+                                      np.array(H))
+                angleZ += rZ[i] * d_time
+                rotations.append(angleZ)
+
+            else:
+                angleZKalman.predict(np.array(0))
+                rotationRate = angleZKalman.update(np.array(rZ[i]))
+                rotation = rotationRate * d_time
+                angleZ += rotation
+                rotations.append(rotation)
+
+            poseX.append(angleX)
+            poseY.append(angleY)
+            poseZ.append(angleZ)
+    angleX = 0
+    angleY = 0
+    angleZ = 0
+
+    poseX = []
+    poseY = []
+    poseZ = []
+
+    rotations = []
+
+    for i in range(num):
+        angleX += rX[i] * d_time
+        angleY += rY[i] * d_time
+
+        if i == 0:
+            X = 0
+            P = 1
+            A = 1
+            Q = 1e-5
+            R = 3e-1
+            B = 0
+            U = 0
+            H = 1
+
+            angleZKalman = kalman(np.array(X), \
+                                  np.array(P), \
+                                  np.array(A), \
+                                  np.array(Q), \
+                                  np.array(R), \
+                                  np.array(B), \
+                                  np.array(U), \
+                                  np.array(H))
+            angleZ += rZ[i] * d_time
+            rotations.append(angleZ)
+
+        else:
+            angleZKalman.predict(np.array(0))
+            rotationRate = angleZKalman.update(np.array(rZ[i]))
+            rotation = rotationRate * d_time
+            angleZ += rotation
+            rotations.append(rotation)
+
+        poseX.append(angleX)
+        poseY.append(angleY)
+        poseZ.append(angleZ)
+    return rotations, path_x, path_y, path_z, poseX, poseY, poseZ, steps_path
 
 
 # coordinates
-def kalman_coordinares(steps_path, num):
+def kalman_coordinares(steps_path, rotations):
     x = [0, steps_path[1]]
     y = [0, 0]
 
-    for i in range(1, num - 1):
-        angle = num[i + 1]
+    for i in range(1, len(rotations) - 1):
+        angle = rotations[i + 1]
         radius = steps_path[i + 1]
-
-        # print angle
 
         slope = (y[i] - y[i - 1]) / (x[i] - x[i - 1])
 
@@ -324,8 +413,7 @@ def kalman_coordinares(steps_path, num):
                     break
 
         rotated_coords = dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), \
-                            np.array([[end_x - x[i]], [end_y - y[i]]])) \
-                        + np.array([[x[i]], [y[i]]])
+                            np.array([[end_x - x[i]], [end_y - y[i]]])) + np.array([[x[i]], [y[i]]])
 
         x.append(rotated_coords[0][0])
         y.append(rotated_coords[1][0])
